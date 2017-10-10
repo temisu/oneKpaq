@@ -67,14 +67,10 @@ optional, I strongly recommended using it.
 For the simplicity, the supported operating modes have been
 enumerated as follows:
 
-1 - Single section decoder. Slow decoder for single section data
-  - Decompressor is 128 bytes
-2 - Multi section decode. Slow decoder for multi-section data
-  - Decompressor is 150 bytes
-3 - Single section decoder. Fast decoder for single section data
-  - Decompressor is 143 bytes
-4 - Multi section decode. Fast decoder for multi-section data
-  - Decompressor is 165 bytes
+1. Single section decoder. Slow decoder for single section data: Decompressor is 128 bytes
+1. Multi section decode. Slow decoder for multi-section data: Decompressor is 150 bytes
+1. Single section decoder. Fast decoder for single section data: Decompressor is 143 bytes
+1. Multi section decode. Fast decoder for multi-section data: Decompressor is 165 bytes
 
 For the compressor, three complexity modes for compressing has
 been defined: Low, Medium and High. These will translate to
@@ -87,11 +83,11 @@ Look for the oneKpaq_main.cpp how to use the compressor and
 AsmDecode.cpp how to use the decompressor. Typical freestanding
 usage of the decompressor would be something like this:
 
-	mov ebx,source_of_compressed_code
-	push ebx
-	mov edi,destination_in_bss
-%include "onekpaq_decompressor32.asm"
-	ret
+> 	mov ebx,source_of_compressed_code
+> 	push ebx
+> 	mov edi,destination_in_bss
+> %include "onekpaq_decompressor32.asm"
+> 	ret
 
 Please mind and define ONEKPAQ_DECOMPRESSOR_SHIFT for the
 correct value produced, or include setting this value in your
