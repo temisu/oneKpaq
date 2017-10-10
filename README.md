@@ -83,11 +83,13 @@ Look for the oneKpaq_main.cpp how to use the compressor and
 AsmDecode.cpp how to use the decompressor. Typical freestanding
 usage of the decompressor would be something like this:
 
-> 	mov ebx,source_of_compressed_code
-> 	push ebx
-> 	mov edi,destination_in_bss
-> %include "onekpaq_decompressor32.asm"
-> 	ret
+```
+	mov ebx,source_of_compressed_code
+	push ebx
+	mov edi,destination_in_bss
+%include "onekpaq_decompressor32.asm"
+	ret
+```
 
 Please mind and define ONEKPAQ_DECOMPRESSOR_SHIFT for the
 correct value produced, or include setting this value in your
