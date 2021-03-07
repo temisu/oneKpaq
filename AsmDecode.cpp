@@ -1,8 +1,14 @@
 /* Copyright (C) Teemu Suutari */
 
+#include <string.h> /* memcpy */
 #include <vector>
 #include <sys/mman.h>
+#ifndef __linux__
 #include <mach/vm_param.h>
+#else
+#include <unistd.h>
+#define PAGE_SIZE (sysconf(_SC_PAGESIZE))
+#endif
 
 #include "onekpaq_common.h"
 #include "AsmDecode.hpp"
@@ -42,21 +48,21 @@ static void makeRunnable(void *ptr,ulong size)
 
 std::vector<u8> AsmDecode(const std::vector<u8> &src1,const std::vector<u8> &src2,StreamCodec::EncodeMode mode,uint shift) {
 	typedef void (*AsmDecompressor)(void*,void*);
-	void *decompressors[4]={
+	static void *decompressors[4]={
 		&onekpaq_decompressor_mode1,
 		&onekpaq_decompressor_mode2,
 		&onekpaq_decompressor_mode3,
 		&onekpaq_decompressor_mode4
 	};
 
-	ulong decompressorShiftOffsets[4]={
+	static ulong decompressorShiftOffsets[4]={
 		(ulong)&onekpaq_decompressor_mode1_shift-(ulong)(void*)&onekpaq_decompressor_mode1,
 		(ulong)&onekpaq_decompressor_mode2_shift-(ulong)(void*)&onekpaq_decompressor_mode2,
 		(ulong)&onekpaq_decompressor_mode3_shift-(ulong)(void*)&onekpaq_decompressor_mode3,
 		(ulong)&onekpaq_decompressor_mode4_shift-(ulong)(void*)&onekpaq_decompressor_mode4
 	};
 
-	ulong decompressorSizes[4]={
+	static ulong decompressorSizes[4]={
 		(ulong)&onekpaq_decompressor_mode1_end-(ulong)(void*)&onekpaq_decompressor_mode1,
 		(ulong)&onekpaq_decompressor_mode2_end-(ulong)(void*)&onekpaq_decompressor_mode2,
 		(ulong)&onekpaq_decompressor_mode3_end-(ulong)(void*)&onekpaq_decompressor_mode3,
@@ -78,6 +84,7 @@ std::vector<u8> AsmDecode(const std::vector<u8> &src1,const std::vector<u8> &src
 	((u8*)(void*)decompr)[decompressorShiftOffsets[dIndex]]=shift;
 	makeRunnable((void*)decompr,decompressorSizes[dIndex]);
 
+	fprintf(stderr, "offset = %zu, mode=%zu, dind=%zu, shift=%zu\n", src1.size(), mode, dIndex, shift);
 	INFO("Running asm decompressor Xbx=%p Xdi=%p",combine.data()+src1.size(),ret.data()+destStartMargin);
 	auto timeTaken=Timer([&]() {
 		decompr(combine.data()+src1.size(),ret.data()+destStartMargin);

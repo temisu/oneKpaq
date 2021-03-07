@@ -3,12 +3,24 @@
 BITS	:= 32
 VERSION	= 1.1
 
+-include config.mk
+
+HAS_LIBDISPATCH ?= 0
+
 CC	= clang
 CXX	= clang++
-COMMONFLAGS = -Os -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\""
+COMMONFLAGS = -g -Og -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\""
 CFLAGS	= $(COMMONFLAGS)
 CXXFLAGS = $(COMMONFLAGS) -std=c++14
-AFLAGS	= -O2
+AFLAGS	= -O2 -g
+
+ifneq ($(HAS_LIBDISPATCH),0)
+ifneq ($(LIBDISPATCH_INC_DIR),)
+COMMONFLAGS += -DHAS_LIBDISPATCH -I$(LIBDISPATCH_INC_DIR) -L$(LIBDISPATCH_LIB_DIR) -ldispatch -fblocks -lBlocksRuntime
+else
+COMMONFLAGS += -DHAS_LIBDISPATCH -ldispatch -fblocks -lBlocksRuntime
+endif
+endif
 
 # debugging...
 #COMMONFLAGS += -DDEBUG_BUILD -g
@@ -16,17 +28,20 @@ AFLAGS	= -O2
 
 ifeq ($(BITS),64)
 COMMONFLAGS += -m64
-AFLAGS	+= -fmacho64
+AFLAGS	+= -felf64
 else
 COMMONFLAGS += -m32
-AFLAGS	+= -fmacho32
+AFLAGS	+= -felf32
 endif
 
-PROG	= onekpaq
-SLINKS	= onekpaq_encode onekpaq_decode
-OBJS	= ArithEncoder.o ArithDecoder.o BlockCodec.o StreamCodec.o AsmDecode.o CacheFile.o \
-	onekpaq_main.o log.o \
-	$(foreach decompr,1 2 3 4,onekpaq_cfunc_$(decompr).o)
+PROG	:= onekpaq
+SLINKS	:= onekpaq_encode onekpaq_decode
+OBJS	:= ArithEncoder.o ArithDecoder.o BlockCodec.o StreamCodec.o CacheFile.o \
+	onekpaq_main.o log.o
+
+ifeq ($(BITS),32)
+OBJS := $(OBJS) AsmDecode.o $(foreach decompr,1 2 3 4,onekpaq_cfunc_$(decompr).o)
+endif
 
 all: $(SLINKS)
 
