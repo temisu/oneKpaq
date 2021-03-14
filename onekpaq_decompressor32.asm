@@ -74,7 +74,7 @@
 	;
 	; inputs:
 	; ebx concatenated block1+block2, pointer to start of block2
-	; edi dest (must be zero filled and writable from -9 byte offset
+	; edi dest (must be zero filled and writable from -13 byte offset
 	;     to the expected length plus one byte)
 	; header+src+dest buffers must not overlap
 	; d flag clear

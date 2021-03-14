@@ -71,8 +71,8 @@ std::vector<u8> AsmDecode(const std::vector<u8> &src1,const std::vector<u8> &src
 	std::vector<u8> combine=src1;
 	combine.insert(combine.end(),src2.begin(),src2.end());
 	for (int i=0;i<4;i++) combine.push_back(0);
-	const uint destStartMargin=9;
-	
+	const uint destStartMargin=13;
+
 	uint dIndex=static_cast<uint>(mode)-1;
 	AsmDecompressor decompr=(AsmDecompressor)makeCodeblock(decompressors[dIndex],decompressorSizes[dIndex]);
 	((u8*)(void*)decompr)[decompressorShiftOffsets[dIndex]]=shift;

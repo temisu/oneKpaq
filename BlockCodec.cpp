@@ -384,8 +384,7 @@ template<>
 u32 BlockCodec::CompressorModel<QWContextModel,PAQ1CountBooster,LogisticMixer>::CalculateSubRange(const std::vector<u8> &src,int bitPos,const std::vector<BlockCodec::Model> &models,u32 range,uint shift)
 {
 	// implementation is correct. however, there might be rounding errors
-	// ruining the result. It depends on the compilers and builtins whether
-	// sqrtl reduces to fqsrt and lrintl reduces to fist.
+	// ruining the result.
 	// please note the funny looking type-conversions here. they are for a reason
 	ASSERT(bitPos>=-1,"Invalid pos");
 
@@ -405,17 +404,19 @@ u32 BlockCodec::CompressorModel<QWContextModel,PAQ1CountBooster,LogisticMixer>::
 	uint weight=def[0].second;
 	for (auto &it:def) {
 		while (weight!=it.second) {
-			p=sqrtl(p);
+			asm volatile("fsqrt\n":"=t"(p):"0"(p));
 			weight>>=1;
 		}
 		p=(long double)(int)it.first.c0/p;
 		p=(long double)(int)it.first.c1/p;
 	}
 	while (weight!=1) {
-		p=sqrtl(p);
+		asm volatile("fsqrt\n":"=t"(p):"0"(p));
 		weight>>=1;
 	}
-	return u32(lrintl((long double)(int)range/(1+p)));
+	u32 ret;
+	asm volatile("fistl %0\n":"=m"(ret):"t"((long double)(int)range / (1+p)));
+	return ret;
 }
 
 // TODO: remove cut-copy-paste
@@ -442,17 +443,19 @@ u32 BlockCodec::CompressorModel<NoLimitQWContextModel,PAQ1CountBooster,LogisticM
 	uint weight=def[0].second;
 	for (auto &it:def) {
 		while (weight!=it.second) {
-			p=sqrtl(p);
+			asm volatile("fsqrt\n":"=t"(p):"0"(p));
 			weight>>=1;
 		}
 		p=(long double)(int)it.first.c0/p;
 		p=(long double)(int)it.first.c1/p;
 	}
 	while (weight!=1) {
-		p=sqrtl(p);
+		asm volatile("fsqrt\n":"=t"(p):"0"(p));
 		weight>>=1;
 	}
-	return u32(lrintl((long double)(int)range/(1+p)));
+	u32 ret;
+	asm volatile("fistl %0\n":"=m"(ret):"t"((long double)(int)range / (1+p)));
+	return ret;
 }
 
 // ---
