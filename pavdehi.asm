@@ -17,6 +17,7 @@
 %define AT_EMPTY_PATH	0x1000
 %define P_ALL			4
 
+%define SYS_exit			  1
 %define SYS_fork			  2
 %define SYS_write			  4
 %define SYS_open			  5
@@ -73,7 +74,11 @@ _start:
 	;lea edi, [ebx + payload_dest-payload]
 
 	;.loopme: jmp short .loopme
+
 %include "onekpaq_decompressor32.asm"
+	mov eax, SYS_exit
+	xor bl, bl
+	int 0x80
 
 	mov eax, SYS_memfd_create
 	; ebx: name: whatever
