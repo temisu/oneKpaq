@@ -84,8 +84,14 @@ std::vector<u8> AsmDecode(const std::vector<u8> &src1,const std::vector<u8> &src
 	((u8*)(void*)decompr)[decompressorShiftOffsets[dIndex]]=shift;
 	makeRunnable((void*)decompr,decompressorSizes[dIndex]);
 
-	fprintf(stderr, "offset = %zu, mode=%zu, dind=%zu, shift=%zu\n", src1.size(), mode, dIndex, shift);
-	INFO("Running asm decompressor Xbx=%p Xdi=%p",combine.data()+src1.size(),ret.data()+destStartMargin);
+	/*fprintf(stderr, "offset = %zu, mode=%zu, dind=%zu, shift=%zu\n", src1.size(), mode, dIndex, shift);
+	for (size_t i = 0; i < ((src1.size() < 4) ? src1.size() : 4); ++i) {
+		fprintf(stderr, "src1[%zu] = 0x%x\n", i, src1[i]);
+	}
+	for (size_t i = 0; i < ((src2.size() < 4) ? src2.size() : 4); ++i) {
+		fprintf(stderr, "src2[%zu] = 0x%x\n", i, src2[i]);
+	}*/
+	//INFO("Running asm decompressor Xbx=%p Xdi=%p",combine.data()+src1.size(),ret.data()+destStartMargin);
 	auto timeTaken=Timer([&]() {
 		decompr(combine.data()+src1.size(),ret.data()+destStartMargin);
 	});

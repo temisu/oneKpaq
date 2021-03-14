@@ -1,0 +1,6 @@
+obj/
+config.mk
+onekpaq
+onekpaq_encode
+onekpaq_decode
+onekpaq_context.cache*

@@ -1,3 +1,50 @@
+# OneKpaq Linux version
+
+## Dependencies
+
+You may want to install `libdispatch`, or compression will be really really
+slow. If there isn't a distro package for it, you can grab it
+[here](https://github.com/apple/swift-corelibs-libdispatch/), and then edit
+your `config.mk` to set `HAS_LIBDISPATCH` to 1, and `LIBDISPATCH_INC_DIR` and
+`LIBDISPATCH_LIB_DIR` to the right values.
+
+In any case, `libdispatch` is not a hard requirement. But you'll really really
+want it.
+
+## Compiling
+
+```sh
+$ make
+```
+
+## Running
+
+For ease of use (to compress a binary immediately into another executable
+binary), you probably want to run the Python script instead of the C++ program:
+
+```
+$ ./onekpaq.py --help
+Usage: ./onekpaq.py <mode> <complexity> <input...> <output>
+	mode: possible options:
+		1: single block (small decoder)
+		2: multi-block (small decoder)
+		3: single block (fast decoder)
+		4: multi-block (fast decoder)
+	complexity: ranges from 1 (low) to 3 (high). 'high' compresses smaller
+	            but takes a longer time to compress and decompress
+
+$ ./onekpaq.py 3 3 hello hello.okp && ./hello.okp
+Hello world!
+```
+
+Currently, this program has to be executed in the root directory of this
+repository.
+
+-----------------
+
+## Original README
+
+```
 
                .--------. .--------.   .---.
                `-----.   |`------.  `.  \   \
@@ -6,7 +53,7 @@
                      `---'`---------'      `---'
 
 ----------------------------------------------------------------
-                     oneKpaq v1.0 by TS/TDA            
+                     oneKpaq v1.0 by TS/TDA
 ----------------------------------------------------------------
 
 
@@ -154,3 +201,5 @@ Thanks
 
 Special thanks to Firehawk - Without his help, these projects
 would have stayed at the drawing board. (Also thx for the logo)
+
+```

@@ -1,9 +1,9 @@
 # Copyright (C) Teemu Suutari
 
-BITS	:= 32
+BITS	?= $(shell getconf LONG_BIT)
 VERSION	= 1.1
 
--include config.mk
+NASM ?= nasm
 
 HAS_LIBDISPATCH ?= 0
 
@@ -17,6 +17,8 @@ endif
 CFLAGS	= $(COMMONFLAGS)
 CXXFLAGS = $(COMMONFLAGS) -std=c++14
 AFLAGS	= -O2 -g
+
+-include config.mk
 
 ifneq ($(HAS_LIBDISPATCH),0)
 ifneq ($(LIBDISPATCH_INC_DIR),)
@@ -39,28 +41,31 @@ AFLAGS	+= -felf32
 endif
 
 PROG	:= onekpaq
-SLINKS	:= onekpaq_encode onekpaq_decode
-OBJS	:= ArithEncoder.o ArithDecoder.o BlockCodec.o StreamCodec.o CacheFile.o \
-	onekpaq_main.o log.o
+SLINKS	:= onekpaq_encode #onekpaq_decode
+OBJS	:= obj/ArithEncoder.cpp.o obj/ArithDecoder.cpp.o obj/BlockCodec.cpp.o obj/StreamCodec.cpp.o obj/CacheFile.cpp.o \
+	obj/onekpaq_main.cpp.o obj/log.c.o
 
 ifeq ($(BITS),32)
-OBJS := $(OBJS) AsmDecode.o $(foreach decompr,1 2 3 4,onekpaq_cfunc_$(decompr).o)
+OBJS := $(OBJS) obj/AsmDecode.cpp.o $(foreach decompr,1 2 3 4,obj/onekpaq_cfunc_$(decompr).asm.o)
 endif
 
 all: $(SLINKS)
 
-.asm.o:
-	nasm $(AFLAGS) $<
+%/:
+	mkdir -p "$@"
 
-.cpp.o:
-	$(CXX) $(CXXFLAGS) -c $<
+#obj/%.asm.o: %.asm obj/
+#	$(NASM) $(AFLAGS) "$<" -o "$@"
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+obj/%.cpp.o: %.cpp obj/
+	$(CXX) $(CXXFLAGS) -c "$<" -o "$@"
+
+obj/%.c.o: %.c obj/
+	$(CC) $(CFLAGS) -c "$<" -o "$@"
 
 define decompressors
-onekpaq_cfunc_$(1).o: onekpaq_decompressor$(BITS).asm onekpaq_cfunc$(BITS).asm
-	nasm $(AFLAGS) -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_cfunc$(BITS).asm -o onekpaq_cfunc_$(1).o
+obj/onekpaq_cfunc_$(1).asm.o: onekpaq_decompressor$(BITS).asm onekpaq_cfunc$(BITS).asm obj/
+	$(NASM) $(AFLAGS) -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_cfunc$(BITS).asm -o "obj/onekpaq_cfunc_$(1).asm.o"
 endef
 
 $(foreach decompr,1 2 3 4,$(eval $(call decompressors,$(decompr))))
@@ -79,7 +84,7 @@ clean:
 define reporting
 report$(1): .PHONY
 	@rm -f tmp_out
-	@nasm -O2 -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_decompressor$(BITS).asm -o tmp_out
+	@$(NASM) -O2 -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_decompressor$(BITS).asm -o tmp_out
 	@stat -f "onekpaq decompressor mode$(1) size: %z" tmp_out
 	@rm -f tmp_out
 endef

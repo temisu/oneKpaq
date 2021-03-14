@@ -4,11 +4,19 @@
 ; offset = 2, mode=3, dind=2, shift=3
 
 %ifndef ONEKPAQ_DECOMPRESSOR_MODE
-;%error "please define ONEKPAQ_DECOMPRESSOR_MODE"
-%define ONEKPAQ_DECOMPRESSOR_MODE 3
+%error "please define ONEKPAQ_DECOMPRESSOR_MODE"
+;%define ONEKPAQ_DECOMPRESSOR_MODE 3
 %endif
+%ifndef ONEKPAQ_DECOMPRESSOR_SHIFT
+%error "please define ONEKPAQ_DECOMPRESSOR_SHIFT"
+;%define ONEKPAQ_DECOMPRESSOR_SHIFT 3
+%endif
+%ifndef PAYLOAD_OFF
+%error "please define PAYLOAD_OFF"
+;%define PAYLOAD_OFF 2
+%endif
+
 %define ONEKPAQ_NO_SECTIONS 1
-%define ONEKPAQ_DECOMPRESSOR_SHIFT 3
 
 %define STDIN_FILENO	0
 %define STDOUT_FILENO	1
@@ -70,15 +78,10 @@ phdr:
 _start:
 	mov ebx, payload+PAYLOAD_OFF
 	;push ebx ; ???
-	mov edi, payload_dest
-	;lea edi, [ebx + payload_dest-payload]
-
-	;.loopme: jmp short .loopme
+	;mov edi, payload_dest
+	lea edi, [ebx + payload_dest-payload-PAYLOAD_OFF]
 
 %include "onekpaq_decompressor32.asm"
-	mov eax, SYS_exit
-	xor bl, bl
-	int 0x80
 
 	mov eax, SYS_memfd_create
 	; ebx: name: whatever
@@ -88,11 +91,10 @@ _start:
 	xchg eax, ebx
 	push SYS_write
 	pop eax
-	mov ebx, STDOUT_FILENO
 	mov ecx, payload_dest
 	mov edx, 0x4000-(payload_dest-ehdr)
 	int 0x80
-	int3
+	;int3
 
 	pop ecx
 	mov edx, esp ; argv
@@ -112,30 +114,13 @@ emptystr:
 	db 0
 
 payload:
-;	incbin "flag-lo.onekpaq"
-	incbin "flag.onekpaq"
-;$ ./onekpaq_encode 3 1 ~/src/smol/bin/flag flag-dup.onekpaq
-;I oneKpaq v1.1 64-bit
-;I Starting onekpaq compression with 1 blocks...
-;I Using cache to skip brute force search
-;.
-;I Compression done. Following blocks were created:
-;I Block0 0x00000000-0x000003a5, (934) bytes, contexts: Shift=3 (1/8)*0x40 (1/4)*0x55 (1/4)*0x09 (1/4)*0x00 (1/2)*0x80 
-;I Total (9+469/934), compression ratio 51.18%
-;I Asm stream total (2+477)
-;I Encoding stream took 0.100080 seconds
-;I Verifying...
-;I Decoding stream took 0.049701 seconds
-;I Data verified
-;I Verifying ASM stream...
-;I Decoding stream took 0.050443 seconds
-;I ASM Data verified
-;I ASM-decompressor finished
+	;incbin "flag32.raw"
+	incbin PAYLOAD_BIN
 payload.end:
 
 END:
 
 ;	resb 9
-payload_dest equ payload.end + 9
+payload_dest equ payload.end + 9 + 4
 ;payload_dest:
 
