@@ -309,7 +309,7 @@ onekpaq_decompressor:
 ;	uncommenting the next command would make the single-section decompressor "correct"
 ;	i.e. under %ifndef ONEKPAQ_DECOMPRESSOR_MULTI_SECTION
 ;	does not seem to be a practical problem though
-	dec eax
+	;dec eax
 .dest_bit_is_set:
 	rcl byte [byte esi+8],1
 
