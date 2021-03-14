@@ -62,7 +62,7 @@ int main(int argc,char **argv)
 		}
 
 		struct stat st;
-		ASSERT(::stat(argv[argc-1],&st)==-1,"Destination file exists");
+		//ASSERT(::stat(argv[argc-1],&st)==-1,"Destination file exists");
 
 		StreamCodec s;
 		s.Encode(blocks,mode,complexity,"onekpaq_context.cache");
@@ -110,7 +110,7 @@ int main(int argc,char **argv)
 		if (argc!=3) ABORT("usage: onekpaq_decode input.onekpaq output");
 
 		struct stat st;
-		ASSERT(::stat(argv[2],&st)==-1,"Destination file exists");
+		//ASSERT(::stat(argv[2],&st)==-1,"Destination file exists");
 
 		auto src=readFile(std::string(argv[1]));
 

@@ -285,6 +285,7 @@ void StreamCodec::LoadStream(std::vector<u8> singleStream)
 		prevEnd=headerEnd;
 		if (isSingle) break;
 	}
+	INFO("prevEnd=%u isSingle=%u", prevEnd, isSingle);
 	_dest=std::vector<u8>(singleStream.begin()+prevEnd+(isSingle?0:2),singleStream.end());
 }
 

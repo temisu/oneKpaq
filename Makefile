@@ -9,7 +9,11 @@ HAS_LIBDISPATCH ?= 0
 
 CC	= clang
 CXX	= clang++
-COMMONFLAGS = -g -Os -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\"" -mtune=i386 -fno-tree-vectorize -mfpmath=387 -ffloat-store -mno-sse2 -mno-sse -mno-mmx -m80387
+COMMONFLAGS = -g -Os -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\""
+ifeq ($(BITS),32)
+COMMONFLAGS += -mtune=i386 -fno-tree-vectorize -ffloat-store -mno-sse2 -mno-mmx
+COMMONFLAGS += -mno-sse -mfpmath=387 -m80387
+endif
 CFLAGS	= $(COMMONFLAGS)
 CXXFLAGS = $(COMMONFLAGS) -std=c++14
 AFLAGS	= -O2 -g
