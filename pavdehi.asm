@@ -72,7 +72,7 @@ _start:
 	mov edi, payload_dest
 	;lea edi, [ebx + payload_dest-payload]
 
-	.loopme: jmp short .loopme
+	;.loopme: jmp short .loopme
 %include "onekpaq_decompressor32.asm"
 
 	mov eax, SYS_memfd_create
