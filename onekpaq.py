@@ -4,6 +4,8 @@ import argparse, os, re, shutil, stat, subprocess, sys, tempfile
 
 def main():
     scriptdir = os.path.dirname(os.path.realpath(__file__))
+    # TODO: auto-parameterize this?
+    stubbase = "onekpaq_stub_lnx32.asm"
 
     parser = argparse.ArgumentParser()
 
@@ -11,7 +13,7 @@ def main():
         help="The onekpaq_encode binary to use")
     parser.add_argument('--nasm', default=os.getenv('NASM') or shutil.which('nasm'),
         help="The nasm binary to use")
-    parser.add_argument('--stub', default=scriptdir+"/onekpaq_stub_lnx32.asm",
+    parser.add_argument('--stub', default=scriptdir+"/"+stubbase,
         help="The assembly decompressor stub to use")
 
     parser.add_argument('mode', choices=[1,2,3,4], type=int,
@@ -29,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     with tempfile.NamedTemporaryFile(prefix="onekpaq") as tf:
-        okpargs = [os.getcwd()+"/onekpaq", str(args.mode), str(args.complexity),
+        okpargs = [args.onekpaq, str(args.mode), str(args.complexity),
                    *args.input, tf.name]
         #print(okpargs)
         okpout = subprocess.run(okpargs, stdout=subprocess.PIPE,
@@ -47,8 +49,8 @@ def main():
         #print(offset, shift)
 
         #print(tf.name)
-        nasmargs = [shutil.which('nasm'), "-fbin", "-o", args.output,
-                    "onekpaq_stub_lnx32.asm", "-DPAYLOAD_OFF=%d" % offset,
+        nasmargs = [args.nasm, "-fbin", "-o", args.output,
+                    args.stub, "-DPAYLOAD_OFF=%d" % offset,
                     "-DONEKPAQ_DECOMPRESSOR_MODE=%d" % args.mode,
                     "-DONEKPAQ_DECOMPRESSOR_SHIFT=%d" % shift,
                     "-DPAYLOAD_BIN=\"%s\"" % tf.name]
