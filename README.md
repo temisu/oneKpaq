@@ -1,4 +1,4 @@
-# OneKpaq Linux version
+# oneKpaq Linux version
 
 ## Dependencies
 
