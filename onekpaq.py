@@ -34,15 +34,16 @@ def main():
         okpargs = [args.onekpaq, str(args.mode), str(args.complexity),
                    *args.input, tf.name]
         #print(okpargs)
-        okpout = subprocess.run(okpargs, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, check=False)
-        sys.stderr.buffer.write(okpout.stderr)
+        proc = subprocess.Popen(okpargs, stdout=subprocess.PIPE,
+                                stderr=sys.stderr, cwd=scriptdir)
+        (sout, serr_) = proc.communicate()
+        sys.stderr.buffer.write(sout)
         sys.stderr.buffer.flush()
-        sys.stdout.buffer.write(okpout.stdout)
-        sys.stdout.buffer.flush()
-        okpout.check_returncode()
+        if proc.returncode != 0:
+            print("oneKpaq compressor failed.")
+            return proc.returncode
 
-        out = okpout.stdout.decode('utf-8')
+        out = sout.decode('utf-8')
         match = re.search('P offset=([0-9]+) shift=([0-9]+)', out)
         assert match is not None
         offset, shift = (int(match.group(1)), int(match.group(2)))
@@ -57,6 +58,9 @@ def main():
         #print(nasmargs)
         subprocess.run(nasmargs, check=True)
         os.chmod(args.output, os.stat(args.output).st_mode|stat.S_IEXEC)
+
+        return 0
+
 
 if __name__ == '__main__':
     rv = main()
