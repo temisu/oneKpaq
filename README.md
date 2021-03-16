@@ -24,14 +24,23 @@ binary), you probably want to run the Python script instead of the C++ program:
 
 ```
 $ ./onekpaq.py --help
-Usage: ./onekpaq.py <mode> <complexity> <input...> <output>
-	mode: possible options:
-		1: single block (small decoder)
-		2: multi-block (small decoder)
-		3: single block (fast decoder)
-		4: multi-block (fast decoder)
-	complexity: ranges from 1 (low) to 3 (high). 'high' compresses smaller
-	            but takes a longer time to compress and decompress
+usage: onekpaq.py [-h] [--onekpaq ONEKPAQ] [--nasm NASM] [--stub STUB]
+                  {1,2,3,4} {1,2,3} input [input ...] output
+
+positional arguments:
+  {1,2,3,4}          Selects the compression and decompression mode: '1' is 'single block,
+                     small decoder', '2' is 'multi-block, small decoder', '3' is 'single block,
+                     fast decoder', '4' is 'multi-block, fast decoder'.
+  {1,2,3}            Compression complexity to use. Higher values mean higher compression, but
+                     also longer compression times.
+  input              Input block(s)
+  output             Output executable
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --onekpaq ONEKPAQ  The onekpaq_encode binary to use
+  --nasm NASM        The nasm binary to use
+  --stub STUB        The assembly decompressor stub to use
 
 $ ./onekpaq.py 3 3 hello hello.okp && ./hello.okp
 Hello world!
