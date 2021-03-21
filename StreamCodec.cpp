@@ -4,6 +4,10 @@
 #include <tuple>
 #include <string>
 #include <memory>
+#include <algorithm> /* std::reverse, std::min_element */
+#include <limits> /* std::numeric_limits */
+#include <string.h> /* memcmp */
+#include <stddef.h> /* size_t */
 
 #include "onekpaq_common.h"
 
@@ -223,7 +227,7 @@ void StreamCodec::Encode(const std::vector<std::vector<u8>> &blocks,EncodeMode m
 			// should not happen in practice. For now lets pad with 1-3 bytes
 			_destAsm1.clear();
 			_destAsm2.clear();
-			for (uint i=tmp1.size();i<4;i++) _destAsm2.push_back(0);
+			for (size_t i=tmp1.size();i<4;i++) _destAsm2.push_back(0);
 			_destAsm2.insert(_destAsm2.end(),tmp1.begin(),tmp1.end());
 			_destAsm2.insert(_destAsm2.end(),tmp2.begin(),tmp2.end());
 		} else {
@@ -281,6 +285,7 @@ void StreamCodec::LoadStream(std::vector<u8> singleStream)
 		prevEnd=headerEnd;
 		if (isSingle) break;
 	}
+	//INFO("prevEnd=%u isSingle=%u", prevEnd, isSingle);
 	_dest=std::vector<u8>(singleStream.begin()+prevEnd+(isSingle?0:2),singleStream.end());
 }
 

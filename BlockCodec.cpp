@@ -546,7 +546,7 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 	if (src.size()<=_cm->GetStartOffset()) {
 		_models.clear();
 		_models.push_back(Model{0,2});
-		_rawLength=src.size();
+		_rawLength=uint(src.size());
 		_header=EncodeHeaderAndClean(_models);
 		_estimatedLength=uint(_header.size()+src.size())*8;
 		return;
@@ -558,7 +558,7 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 
 	TICK();
 	DispatchLoop(bitLength,32,[&](size_t i) {
-		_cm->CalculateAllProbabilities(probabilityMap[i],src,i+_cm->GetStartOffset()*8,_shift);
+		_cm->CalculateAllProbabilities(probabilityMap[i],src,uint(i+_cm->GetStartOffset()*8),_shift);
 	});
 
 
@@ -569,13 +569,13 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 	auto IterateModels=[&](std::vector<Model> &models)->std::pair<std::vector<Model>,float> {
 		// parallelization makes this a tad more complicated.
 		// first loop and then decide the best from the candidates
-		uint modelListSize=_cm->GetModelCount()*(numWeights+models.size());
+		size_t modelListSize=_cm->GetModelCount()*(numWeights+models.size());
 		std::vector<std::pair<std::vector<Model>,float>> modelList(modelListSize);
 		for (auto &it:modelList) it.second=std::numeric_limits<float>::infinity();
 
 		DispatchLoop(modelListSize,1,[&](size_t combinedIndex) {
-			uint i=combinedIndex/_cm->GetModelCount();
-			uint newModel=combinedIndex%_cm->GetModelCount();
+			uint i=uint(combinedIndex/_cm->GetModelCount());
+			uint newModel=uint(combinedIndex%_cm->GetModelCount());
 			std::vector<Model> testModels=models;
 			bool modified=false;
 			auto current=std::find_if(testModels.begin(),testModels.end(),[&](const Model &a) {

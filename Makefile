@@ -1,14 +1,32 @@
 # Copyright (C) Teemu Suutari
 
-BITS	:= 32
+BITS	?= $(shell getconf LONG_BIT)
 VERSION	= 1.1
+
+NASM ?= nasm
+
+HAS_LIBDISPATCH ?= 0
 
 CC	= clang
 CXX	= clang++
-COMMONFLAGS = -Os -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\""
+COMMONFLAGS = -g -Os -Wall -Wsign-compare -Wshorten-64-to-32 -Wno-shift-op-parentheses -DONEKPAQ_VERSION="\"$(VERSION)\""
+ifeq ($(BITS),32)
+COMMONFLAGS += -mtune=i386 -fno-tree-vectorize -ffloat-store -mno-sse2 -mno-mmx
+COMMONFLAGS += -mno-sse -mfpmath=387 -m80387
+endif
 CFLAGS	= $(COMMONFLAGS)
 CXXFLAGS = $(COMMONFLAGS) -std=c++14
-AFLAGS	= -O2
+AFLAGS	= -O2 -g
+
+-include config.mk
+
+ifneq ($(HAS_LIBDISPATCH),0)
+ifneq ($(LIBDISPATCH_INC_DIR),)
+COMMONFLAGS += -DHAS_LIBDISPATCH -I$(LIBDISPATCH_INC_DIR) -L$(LIBDISPATCH_LIB_DIR) -ldispatch -fblocks -lBlocksRuntime
+else
+COMMONFLAGS += -DHAS_LIBDISPATCH -ldispatch -fblocks -lBlocksRuntime
+endif
+endif
 
 # debugging...
 #COMMONFLAGS += -DDEBUG_BUILD -g
@@ -16,32 +34,38 @@ AFLAGS	= -O2
 
 ifeq ($(BITS),64)
 COMMONFLAGS += -m64
-AFLAGS	+= -fmacho64
+AFLAGS	+= -felf64
 else
 COMMONFLAGS += -m32
-AFLAGS	+= -fmacho32
+AFLAGS	+= -felf32
 endif
 
-PROG	= onekpaq
-SLINKS	= onekpaq_encode onekpaq_decode
-OBJS	= ArithEncoder.o ArithDecoder.o BlockCodec.o StreamCodec.o AsmDecode.o CacheFile.o \
-	onekpaq_main.o log.o \
-	$(foreach decompr,1 2 3 4,onekpaq_cfunc_$(decompr).o)
+PROG	:= onekpaq
+SLINKS	:= onekpaq_encode #onekpaq_decode
+OBJS	:= obj/ArithEncoder.cpp.o obj/ArithDecoder.cpp.o obj/BlockCodec.cpp.o obj/StreamCodec.cpp.o obj/CacheFile.cpp.o \
+	obj/onekpaq_main.cpp.o obj/log.c.o
+
+ifeq ($(BITS),32)
+OBJS := $(OBJS) obj/AsmDecode.cpp.o $(foreach decompr,1 2 3 4,obj/onekpaq_cfunc_$(decompr).asm.o)
+endif
 
 all: $(SLINKS)
 
-.asm.o:
-	nasm $(AFLAGS) $<
+%/:
+	mkdir -p "$@"
 
-.cpp.o:
-	$(CXX) $(CXXFLAGS) -c $<
+#obj/%.asm.o: %.asm obj/
+#	$(NASM) $(AFLAGS) "$<" -o "$@"
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+obj/%.cpp.o: %.cpp obj/
+	$(CXX) $(CXXFLAGS) -c "$<" -o "$@"
+
+obj/%.c.o: %.c obj/
+	$(CC) $(CFLAGS) -c "$<" -o "$@"
 
 define decompressors
-onekpaq_cfunc_$(1).o: onekpaq_decompressor$(BITS).asm onekpaq_cfunc$(BITS).asm
-	nasm $(AFLAGS) -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_cfunc$(BITS).asm -o onekpaq_cfunc_$(1).o
+obj/onekpaq_cfunc_$(1).asm.o: onekpaq_decompressor$(BITS).asm onekpaq_cfunc$(BITS).asm obj/
+	$(NASM) $(AFLAGS) -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_cfunc$(BITS).asm -o "obj/onekpaq_cfunc_$(1).asm.o"
 endef
 
 $(foreach decompr,1 2 3 4,$(eval $(call decompressors,$(decompr))))
@@ -60,7 +84,7 @@ clean:
 define reporting
 report$(1): .PHONY
 	@rm -f tmp_out
-	@nasm -O2 -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_decompressor$(BITS).asm -o tmp_out
+	@$(NASM) -O2 -DONEKPAQ_DECOMPRESSOR_MODE=$(1) onekpaq_decompressor$(BITS).asm -o tmp_out
 	@stat -f "onekpaq decompressor mode$(1) size: %z" tmp_out
 	@rm -f tmp_out
 endef

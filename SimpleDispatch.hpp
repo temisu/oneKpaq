@@ -3,7 +3,7 @@
 #ifndef SIMPLEDISPATCH_H
 #define SIMPLEDISPATCH_H
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(HAS_LIBDISPATCH)
 
 #include <dispatch/dispatch.h>
 

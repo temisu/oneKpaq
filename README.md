@@ -1,3 +1,59 @@
+# oneKpaq Linux version
+
+## Dependencies
+
+You may want to install `libdispatch`, or compression will be really really
+slow. If there isn't a distro package for it, you can grab it
+[here](https://github.com/apple/swift-corelibs-libdispatch/), and then edit
+your `config.mk` to set `HAS_LIBDISPATCH` to 1, and `LIBDISPATCH_INC_DIR` and
+`LIBDISPATCH_LIB_DIR` to the right values.
+
+In any case, `libdispatch` is not a hard requirement. But you'll really really
+want it.
+
+## Compiling
+
+```sh
+$ make
+```
+
+## Running
+
+For ease of use (to compress a binary immediately into another executable
+binary), you probably want to run the Python script instead of the C++ program:
+
+```
+$ ./onekpaq.py --help
+usage: onekpaq.py [-h] [--onekpaq ONEKPAQ] [--nasm NASM] [--stub STUB]
+                  {1,2,3,4} {1,2,3} input [input ...] output
+
+positional arguments:
+  {1,2,3,4}          Selects the compression and decompression mode: '1' is 'single block,
+                     small decoder', '2' is 'multi-block, small decoder', '3' is 'single block,
+                     fast decoder', '4' is 'multi-block, fast decoder'.
+  {1,2,3}            Compression complexity to use. Higher values mean higher compression, but
+                     also longer compression times.
+  input              Input block(s)
+  output             Output executable
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --onekpaq ONEKPAQ  The onekpaq_encode binary to use
+  --nasm NASM        The nasm binary to use
+  --stub STUB        The assembly decompressor stub to use
+
+$ ./onekpaq.py 3 3 hello hello.okp && ./hello.okp
+Hello world!
+```
+
+Currently, this program has to be executed in the root directory of this
+repository.
+
+-----------------
+
+## Original README
+
+```
 
                .--------. .--------.   .---.
                `-----.   |`------.  `.  \   \
@@ -6,8 +62,9 @@
                      `---'`---------'      `---'
 
 ----------------------------------------------------------------
-                     oneKpaq v1.0 by TS/TDA            
+                     oneKpaq v1.0 by TS/TDA
 ----------------------------------------------------------------
+```
 
 
 Overview
@@ -154,3 +211,4 @@ Thanks
 
 Special thanks to Firehawk - Without his help, these projects
 would have stayed at the drawing board. (Also thx for the logo)
+

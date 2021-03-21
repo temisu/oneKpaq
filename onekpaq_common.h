@@ -17,8 +17,18 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
+#if !defined(__linux__) || !defined(__x86_64__)
+// already defined in sys/types.h
 typedef uint_fast32_t uint;
+#else
+#include <sys/types.h>
+#endif
+#ifndef __linux__
+// already defined in sys/types.h
 typedef uintptr_t ulong;
+#else
+#include <sys/types.h>
+#endif
 
 extern void DebugPrint(const char *str,...);
 extern void DebugPrintAndDie(const char *str,...);

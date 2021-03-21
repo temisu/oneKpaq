@@ -66,7 +66,9 @@
 %else
 	cpu 386
 %endif
-	[section .text]
+%ifndef ONEKPAQ_NO_SECTIONS
+	[section .text.onekpaq_decompressor]
+%endif
 
 ;; end of preproc and setup, start of real stuff
 
@@ -141,6 +143,11 @@ onekpaq_decompressor:
 
 	pushad
 	salc
+	;jc .alff
+	;mov al, 00h
+	;jnc .alok
+;.alff: mov al, 0xff
+;.alok:
 .context_loop:
 	; loop level 3
 	; al 0
@@ -292,9 +299,9 @@ onekpaq_decompressor:
 	sub eax,[ebx]
 	cmp ebp,eax
 %ifdef ONEKPAQ_DECOMPRESSOR_MULTI_SECTION
-	jc short .dest_bit_is_set
+	jc .dest_bit_is_set;short .dest_bit_is_set
 %else
-	jbe short .dest_bit_is_set
+	jbe .dest_bit_is_set;short .dest_bit_is_set
 	inc eax
 %endif
 	sub ebp,eax
@@ -302,7 +309,7 @@ onekpaq_decompressor:
 ;	uncommenting the next command would make the single-section decompressor "correct"
 ;	i.e. under %ifndef ONEKPAQ_DECOMPRESSOR_MULTI_SECTION
 ;	does not seem to be a practical problem though
-;	dec eax
+	;dec eax
 .dest_bit_is_set:
 	rcl byte [byte esi+8],1
 
@@ -312,7 +319,7 @@ onekpaq_decompressor:
 	inc esi
 	mov cl,8
 .no_full_byte:
-	jnz short .bit_loop
+	jnz .bit_loop;short .bit_loop
 
 %else
 .block_loop_trampoline:
@@ -322,26 +329,28 @@ onekpaq_decompressor:
 	inc esi
 
 	dec word [byte edx+1]
-	jnz short .new_byte
+	jnz .new_byte;short .new_byte
 
 	DEBUG "Block done"
 	; next header
 .skip_header_loop:
 	dec edx
 	cmp ch,[edx]
-	jnz short .skip_header_loop
+	jnz .skip_header_loop;short .skip_header_loop
 	lea edx,[byte edx-3]
 	cmp cx,[byte edx+1]
 	lea edi,[byte esi+8]
 .new_byte:
 	mov cl,9
-	jnz short .block_loop_trampoline
+	jnz .block_loop_trampoline;short .block_loop_trampoline
 %endif
 	; all done!
 	; happy happy joy joy
 	DEBUG "oneKpaq decompression done"
 onekpaq_decompressor_end:
 
+%ifndef ONEKPAQ_NO_SECTIONS
 	__SECT__
+%endif
 
 ;; ---------------------------------------------------------------------------

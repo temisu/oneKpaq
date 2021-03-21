@@ -1,6 +1,7 @@
 /* Copyright (C) Teemu Suutari */
 
 #include <fstream>
+#include <cstring>
 #include <sys/stat.h>
 
 #include "onekpaq_common.h"
@@ -44,13 +45,28 @@ void writeFile(const std::string &fileName,const std::vector<u8> &src) {
 
 int main(int argc,char **argv)
 {
-#ifdef __x86_64__
+	if (argc < 2 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+		fprintf(stderr,
+"Usage: %s <mode> <complexity> <input...> <output>\n"
+"\n"
+"\tmode: possible options:\n"
+"\t\t1: single block (small decoder)\n"
+"\t\t2: multi-block (small decoder)\n"
+"\t\t3: single block (fast decoder)\n"
+"\t\t4: multi-block (fast decoder)\n"
+"\tcomplexity: ranges from 1 (low) to 3 (high). 'high' compresses smaller\n"
+"\t            but takes a longer time to compress and decompress\n"
+			, argv[0]);
+		return 0;
+	}
+
+/*#ifdef __x86_64__
 	INFO("oneKpaq v" ONEKPAQ_VERSION " 64-bit");
 #else
 	INFO("oneKpaq v" ONEKPAQ_VERSION " 32-bit");
-#endif
-	if (std::string(argv[0]).find("onekpaq_encode")!=std::string::npos) {
-		if (argc<5) ABORT("usage: onekpaq_encode mode complexity block1 block2 ... blockn output.onekpaq");
+#endif*/
+	//if (std::string(argv[0]).find("onekpaq_encode")!=std::string::npos) {
+		//if (argc<5) ABORT("usage: onekpaq_encode mode complexity block1 block2 ... blockn output.onekpaq");
 
 		StreamCodec::EncodeMode mode=StreamCodec::EncodeMode(atoi(argv[1]));
 		StreamCodec::EncoderComplexity complexity=StreamCodec::EncoderComplexity(atoi(argv[2]));
@@ -62,7 +78,7 @@ int main(int argc,char **argv)
 		}
 
 		struct stat st;
-		ASSERT(::stat(argv[argc-1],&st)==-1,"Destination file exists");
+		//ASSERT(::stat(argv[argc-1],&st)==-1,"Destination file exists");
 
 		StreamCodec s;
 		s.Encode(blocks,mode,complexity,"onekpaq_context.cache");
@@ -92,6 +108,7 @@ int main(int argc,char **argv)
 			ASSERT(src[i]==verify2[i],"%u: %02x!=%02x",i,src[i],verify2[i]);
 		INFO("ASM Data verified");
 
+#ifndef __x86_64__
 		INFO("Using actual ASM-decompressor");
 		// now same thing with asm-decoder
 		auto asmVerify=AsmDecode(s.GetAsmDest1(),s.GetAsmDest2(),mode,s.GetShift());
@@ -99,16 +116,25 @@ int main(int argc,char **argv)
 		// asm decoder does not know anything about size, we can only verify contents
 		for (uint i=0;i<src.size();i++)
 			ASSERT(src[i]==asmVerify[i],"%u: %02x!=%02x",i,src[i],asmVerify[i]);
+#endif
 		INFO("ASM-decompressor finished");
 #endif
 
-		writeFile(std::string(argv[argc-1]),stream);
+		auto src1 = s.GetAsmDest1();
+		auto src2 = s.GetAsmDest2();
+		std::vector<u8> combine=src1;
+		combine.insert(combine.end(),src2.begin(),src2.end());
+		for (int i=0;i<4;i++) combine.push_back(0);
 
-	} else if (std::string(argv[0]).find("onekpaq_decode")!=std::string::npos) {
+		fprintf(stdout/* not stderr */, "P offset=%zu shift=%u\n", src1.size(), s.GetShift());
+
+		writeFile(std::string(argv[argc-1]),combine/*stream*/);
+
+	/*} else if (std::string(argv[0]).find("onekpaq_decode")!=std::string::npos) {
 		if (argc!=3) ABORT("usage: onekpaq_decode input.onekpaq output");
 
 		struct stat st;
-		ASSERT(::stat(argv[2],&st)==-1,"Destination file exists");
+		//ASSERT(::stat(argv[2],&st)==-1,"Destination file exists");
 
 		auto src=readFile(std::string(argv[1]));
 
@@ -116,9 +142,10 @@ int main(int argc,char **argv)
 		s2.LoadStream(src);
 		auto dest=s2.Decode();
 
-#if 0
+#ifndef __x86_64__
 		// now same thing with asm-decoder
-		auto asmVerify=AsmDecode(s2.CreateAsmHeader(),s2.GetDest(),s2.getMode());
+		INFO("mode=%u", s2.getMode());
+		auto asmVerify=AsmDecode(s2.GetAsmDest1(),s2.GetAsmDest2(),s2.getMode(),s2.GetShift());
 
 		// asm decoder does not know anything about size, we can only verify contents
 		for (uint i=0;i<dest.size();i++)
@@ -127,6 +154,6 @@ int main(int argc,char **argv)
 #endif
 
 		writeFile(std::string(argv[2]),dest);
-	} else ABORT("use onekpaq_encode or onekpaq_decode");
+	} else ABORT("use onekpaq_encode or onekpaq_decode");*/
 	return 0;
 }

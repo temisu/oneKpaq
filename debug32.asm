@@ -19,7 +19,10 @@
 ; edx third param
 ; ecx fourth param
 ; return value in eax
-	[section .data]
+
+%ifndef ONEKPAQ_NO_SECTIONS
+	[section .data.onekpaq.func_r_%1]
+%endif
 %%func_r_%1:
 extern %1
 	dd %1
@@ -36,6 +39,7 @@ extern %1
 	push edi
 
 	call [dword %%func_r_%1]
+;	call %1
 
 	pop edi
 	pop esi
@@ -47,14 +51,20 @@ extern %1
 %endm
 
 %macro DEBUG_PLAIN 1
-	[section .rodata]
+%ifndef ONEKPAQ_NO_SECTIONS
+	[section .rodata.onekpaq.dbg_text]
+%endif
 %%dbg_text:
 	db %1
 	db 0
 	__SECT__
 
 	mov edi,%%dbg_text
+%ifidn __OUTPUT_FORMAT__, elf32
+	EXTCALL DebugPrint
+%else
 	EXTCALL _DebugPrint
+%endif
 %endm
 
 %macro DEBUG 1

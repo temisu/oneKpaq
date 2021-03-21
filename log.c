@@ -8,8 +8,8 @@ void DebugPrint(const char *str,...)
 {
 	va_list ap;
 	va_start(ap,str);
-	vfprintf(stdout,str,ap);
-	fflush(stdout);
+	vfprintf(stderr,str,ap);
+	fflush(stderr);
 	va_end(ap);
 }
 
